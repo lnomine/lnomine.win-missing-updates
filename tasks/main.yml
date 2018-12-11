@@ -1,0 +1,14 @@
+- name: Windows - Check for missing updates
+  win_updates:
+    state: searched
+  register: check_updates
+  when: ansible_os_family == 'Windows'
+
+- name: Windows - set missing updates as a fact
+  set_fact:
+    ansible_custom_windows_updates_list:
+      pending_hotfixes: >-
+        {%- if check_updates.updates|length > 0 -%}
+          {{ check_updates | json_query("updates.*.kb[]") | map("regex_replace", "(.*)", "KB\1") | list }}
+        {%- endif -%}
+  when: ansible_os_family == 'Windows'
